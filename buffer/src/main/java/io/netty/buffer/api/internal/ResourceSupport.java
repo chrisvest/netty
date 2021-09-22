@@ -57,6 +57,16 @@ public abstract class ResourceSupport<I extends Resource<I>, T extends ResourceS
     }
 
     /**
+     * Encapsulation bypass for getting the {@link LifecycleTracer} attached to the given object.
+     *
+     * @param obj The object to get the {@link LifecycleTracer} from.
+     * @return The {@link LifecycleTracer} that is attached to the given object.
+     */
+    static LifecycleTracer getTracer(ResourceSupport<?, ?> obj) {
+        return obj.tracer;
+    }
+
+    /**
      * Increment the reference count.
      * <p>
      * Note, this method is not thread-safe because Resources are meant to thread-confined.
@@ -131,6 +141,11 @@ public abstract class ResourceSupport<I extends Resource<I>, T extends ResourceS
         }
     }
 
+    protected final void splittingTo(T splitOff) {
+        LifecycleTracer splitTracer = getTracer(splitOff);
+        tracer.splitTo(splitTracer, acquires, getAcquires(splitOff));
+    }
+
     /**
      * Attach a trace of the life-cycle of this object as suppressed exceptions to the given throwable.
      *
@@ -182,6 +197,17 @@ public abstract class ResourceSupport<I extends Resource<I>, T extends ResourceS
      */
     static int countBorrows(ResourceSupport<?, ?> obj) {
         return obj.countBorrows();
+    }
+
+    /**
+     * Encapsulation bypass to directly read the acquires field.
+     * This is used by the life cycle tracers, because every trace point needs to snapshot the acquires field.
+     *
+     * @param obj The object to read the acquires field from.
+     * @return The acquires field value.
+     */
+    static int getAcquires(ResourceSupport<?, ?> obj) {
+        return obj.acquires;
     }
 
     /**

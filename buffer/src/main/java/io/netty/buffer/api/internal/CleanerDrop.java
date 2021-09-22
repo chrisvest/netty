@@ -76,6 +76,7 @@ public final class CleanerDrop<T extends Buffer> implements Drop<T> {
         final Drop<T> drop;
         final MemoryManager manager;
         volatile boolean dropping;
+        LifecycleTracer tracer;
 
         private GatedRunner(Drop<T> drop, MemoryManager manager) {
             this.drop = drop;
@@ -90,12 +91,15 @@ public final class CleanerDrop<T extends Buffer> implements Drop<T> {
                 if (dropping) {
                     drop.drop((T) obj);
                 } else {
-                    manager.recoverMemory(ALLOC_CONTROL, obj, (Drop<Buffer>) drop).close();
+                    try (Buffer recoveredBuffer = manager.recoverMemory(ALLOC_CONTROL, obj, (Drop<Buffer>) drop)) {
+                        LeakDetection.reportLeak(tracer, recoveredBuffer);
+                    }
                 }
             }
         }
 
         public void prepareRecover(T obj) {
+            tracer = ResourceSupport.getTracer((ResourceSupport<?, ?>) obj);
             set(manager.unwrapRecoverableMemory(obj));
         }
     }

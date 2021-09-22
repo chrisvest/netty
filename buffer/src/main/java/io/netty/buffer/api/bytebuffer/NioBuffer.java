@@ -317,6 +317,7 @@ class NioBuffer extends AdaptableBuffer<NioBuffer> implements ReadableComponent,
         var splitByteBuffer = bbslice(rmem, 0, splitOffset);
         var splitBuffer = new NioBuffer(base, splitByteBuffer, control, drop);
         drop.attach(splitBuffer);
+        splittingTo(splitBuffer);
         splitBuffer.woff = Math.min(woff, splitOffset);
         splitBuffer.roff = Math.min(roff, splitOffset);
         boolean readOnly = readOnly();
