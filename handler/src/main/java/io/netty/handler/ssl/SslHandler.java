@@ -59,6 +59,7 @@ import java.nio.channels.ClosedChannelException;
 import java.nio.channels.DatagramChannel;
 import java.nio.channels.SocketChannel;
 import java.util.List;
+import java.util.concurrent.Callable;
 import java.util.concurrent.Executor;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -2150,10 +2151,16 @@ public class SslHandler extends ByteToMessageDecoder implements ChannelOutboundH
         ctx.flush();
     }
 
-     private void setOpensslEngineSocketFd(Channel c) {
+     private void setOpensslEngineSocketFd(final Channel c) {
          if (c instanceof UnixChannel && engine instanceof ReferenceCountedOpenSslEngine) {
              ((ReferenceCountedOpenSslEngine) engine).bioSetFd(((UnixChannel) c).fd().intValue());
          }
+         engine.getSession().putValue("__io.netty.remote", new Callable<SocketAddress>() {
+             @Override
+             public SocketAddress call() throws Exception {
+                 return c.remoteAddress();
+             }
+         });
      }
 
     /**
