@@ -779,7 +779,6 @@ public class DnsNameResolverTest {
     }
 
     private static UnknownHostException resolveNonExistentDomain(DnsNameResolver resolver) {
-
         Throwable cause = assertThrows(CompletionException.class,
                 () -> resolver.resolve("non-existent.netty.io").sync());
 
